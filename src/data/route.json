@@ -1,0 +1,82 @@
+{
+  "routeId": "route-4417",
+  "stops": [
+    {
+      "id": "stop-1",
+      "sequence": 1,
+      "customerName": "D. Alvarez",
+      "address": "40 Bay St, Toronto",
+      "parcelCount": 1,
+      "windowEnd": "2026-08-31T17:00:00-04:00",
+      "templateId": "tpl-pod-standard",
+      "dropZone": [
+        { "latitude": 43.6426, "longitude": -79.3822 },
+        { "latitude": 43.6426, "longitude": -79.3798 },
+        { "latitude": 43.6442, "longitude": -79.3798 },
+        { "latitude": 43.6442, "longitude": -79.3822 }
+      ]
+    },
+    {
+      "id": "stop-2",
+      "sequence": 2,
+      "customerName": "K. Nakamura",
+      "address": "77 Adelaide St W, Toronto",
+      "parcelCount": 2,
+      "windowEnd": "2026-08-31T17:30:00-04:00",
+      "templateId": "tpl-pod-standard",
+      "dropZone": [
+        { "latitude": 43.6493, "longitude": -79.3835 },
+        { "latitude": 43.6493, "longitude": -79.3810 },
+        { "latitude": 43.6508, "longitude": -79.3810 },
+        { "latitude": 43.6508, "longitude": -79.3835 }
+      ]
+    },
+    {
+      "id": "stop-3",
+      "sequence": 3,
+      "customerName": "P. Osei",
+      "address": "18 York St, Toronto",
+      "parcelCount": 1,
+      "windowEnd": "2026-08-31T18:00:00-04:00",
+      "templateId": "tpl-pod-minimal",
+      "dropZone": [
+        { "latitude": 43.6440, "longitude": -79.3810 },
+        { "latitude": 43.6440, "longitude": -79.3785 },
+        { "latitude": 43.6458, "longitude": -79.3785 },
+        { "latitude": 43.6458, "longitude": -79.3797 },
+        { "latitude": 43.6450, "longitude": -79.3797 },
+        { "latitude": 43.6450, "longitude": -79.3810 }
+      ]
+    },
+    {
+      "id": "stop-4",
+      "sequence": 4,
+      "customerName": "R. Fontaine",
+      "address": "300 Front St W, Toronto",
+      "parcelCount": 3,
+      "windowEnd": "2026-08-31T18:30:00-04:00",
+      "templateId": "tpl-pod-standard",
+      "dropZone": [
+        { "latitude": 43.6415, "longitude": -79.3870 },
+        { "latitude": 43.6415, "longitude": -79.3850 },
+        { "latitude": 43.6428, "longitude": -79.3850 },
+        { "latitude": 43.6428, "longitude": -79.3870 }
+      ]
+    },
+    {
+      "id": "stop-5",
+      "sequence": 5,
+      "customerName": "S. Whitfield",
+      "address": "10 Dundas St E, Toronto",
+      "parcelCount": 1,
+      "windowEnd": "2026-08-31T19:00:00-04:00",
+      "templateId": "tpl-pod-broken",
+      "dropZone": [
+        { "latitude": 43.6555, "longitude": -79.3810 },
+        { "latitude": 43.6555, "longitude": -79.3790 },
+        { "latitude": 43.6568, "longitude": -79.3790 },
+        { "latitude": 43.6568, "longitude": -79.3810 }
+      ]
+    }
+  ]
+}

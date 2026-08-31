@@ -1,0 +1,85 @@
+[
+  {
+    "templateId": "tpl-pod-standard",
+    "name": "Proof of Delivery",
+    "fields": [
+      {
+        "id": "f1",
+        "type": "DROPDOWN",
+        "label": "Outcome",
+        "isRequired": true,
+        "options": ["Handed to customer", "Left in safe place", "Neighbour", "Refused"]
+      },
+      {
+        "id": "f2",
+        "type": "TEXT",
+        "label": "Neighbour's unit number",
+        "isRequired": true,
+        "visibleWhen": { "fieldId": "f1", "equals": "Neighbour" }
+      },
+      {
+        "id": "f3",
+        "type": "TEXTAREA",
+        "label": "Reason for refusal",
+        "isRequired": true,
+        "visibleWhen": { "fieldId": "f1", "equals": "Refused" }
+      },
+      {
+        "id": "f4",
+        "type": "DATETIME",
+        "label": "Delivered at",
+        "isRequired": true
+      },
+      {
+        "id": "f5",
+        "type": "CHECKBOX",
+        "label": "Checks performed",
+        "isRequired": false,
+        "options": ["ID verified", "Age verified", "Packaging intact"]
+      }
+    ]
+  },
+  {
+    "templateId": "tpl-pod-minimal",
+    "name": "Quick Proof of Delivery",
+    "fields": [
+      {
+        "id": "f1",
+        "type": "DROPDOWN",
+        "label": "Outcome",
+        "isRequired": true,
+        "options": ["Handed to customer", "Left in safe place"]
+      },
+      {
+        "id": "f2",
+        "type": "DATETIME",
+        "label": "Delivered at",
+        "isRequired": true
+      }
+    ]
+  },
+  {
+    "templateId": "tpl-pod-broken",
+    "name": "Broken Template (edge-case fixture)",
+    "fields": [
+      {
+        "id": "f1",
+        "type": "DROPDOWN",
+        "label": "Outcome (options missing on purpose)",
+        "isRequired": true
+      },
+      {
+        "id": "f2",
+        "type": "SIGNATURE_PAD",
+        "label": "Signature (a type we've never built)",
+        "isRequired": true
+      },
+      {
+        "id": "f3",
+        "type": "DATETIME",
+        "label": "Delivered at",
+        "isRequired": true
+      }
+    ]
+  }
+]
