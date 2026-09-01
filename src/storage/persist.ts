@@ -20,4 +20,7 @@ export const persist = {
 
 export const STORAGE_KEYS = {
   outbox: 'outbox.deliveries.v1',
+  activeStopId: 'route.activeStopId.v1',
+  completedStopIds: 'route.completedStopIds.v1',
+  zoneState: 'geofence.zoneRecords.v1',
 } as const;
