@@ -1,79 +1,119 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Delivery Console
 
-# Getting Started
+A React Native (TypeScript, bare CLI) app for a delivery courier working a route of stops.
+Built to the "Last-Mile Delivery Console" instructions: offline-first outbox sync, a hand-rolled
+geofence state machine, and a proof-of-delivery form rendered entirely from a JSON template.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
-
-## Step 1: Start the Metro Server
-
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
-
-To start Metro, run the following command from the _root_ of your React Native project:
+## Running it
 
 ```bash
-# using npm
-npm start
-
-# OR using Yarn
-yarn start
+npm install
+npm start          # Metro bundler, in its own terminal
+npm run android    # in a second terminal
 ```
 
-## Step 2: Start your Application
+There is no real backend — `src/api/mockApi.ts` is an in-process fake with configurable
+latency, failure rate, and forced status codes (edit `mockApiConfig` at the top of that
+file). It serves the fixture data in `src/data/route.json` and `src/data/pod-templates.json`.
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+## Driving the simulated GPS stream
 
-### For Android
+The Route screen has a **Dev GPS Simulator** panel at the bottom. It talks to the same
+`locationStream` singleton a real GPS watch would feed, so the app can't tell the difference:
 
-```bash
-# using npm
-npm run android
+- **Jump inside zone / Jump far away** — drop a single fix, useful for testing the Arrive gate.
+- **Play: arrive → depart → return** — replays a short scripted track (outside ×3 → inside ×3 →
+  outside ×3 → inside ×3) at 800ms/fix, enough to walk through the full arrival/departure cycle
+  including the confirmation streak.
+- **Custom fix** — type any lat/lng and inject it directly.
 
-# OR using Yarn
-yarn android
-```
+To exercise the full offline scenario: turn on airplane mode (device/emulator setting, not
+in-app), use the simulator to arrive and submit a delivery at 2-3 stops, force-quit the app,
+reopen it (stops still show completed, Outbox still has them queued), then turn the network
+back on.
 
-### For iOS
+## Architecture
 
-```bash
-# using npm
-npm run ios
+Business logic is deliberately kept out of the screens, split into small, independent pieces
+under `src/`:
 
-# OR using Yarn
-yarn ios
-```
+- **`src/geofence/`** — `pointInPolygon.ts` (hand-rolled ray-casting containment + haversine
+  distance, no library) and `zoneStateMachine.ts` (the per-stop `NOT_ARRIVED → AT_STOP ⇄
+  DEPARTED_EARLY` machine). `locationStream.ts` is the single source of GPS fixes, fed either
+  by the dev simulator or real GPS.
+- **`src/outbox/`** — `outboxStore.ts` (the persisted local delivery queue) and `syncEngine.ts`
+  (the sequential sync pass: backoff, retry cap, 4xx-vs-network classification, idempotent-
+  replay handling). Neither imports React.
+- **`src/forms/`** — `fieldRegistry.tsx` (type → renderer map), `visibility.ts` (`visibleWhen`
+  evaluation + stripping hidden answers), `validateForm.ts`.
+- **`src/route/routeController.ts`** — the single hub tying the above together: owns the
+  active stop, wires NetInfo/AppState/a periodic timer into the sync engine, and exposes a
+  plain subscribe/snapshot interface. Screens are a thin `useRouteSnapshot()` hook over this;
+  none of them own state that matters.
+- **`src/screens/`** — Route, Proof of Delivery, Outbox. Presentation only.
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+### State management / persistence
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+No Redux or similar library — the singletons above (`outboxStore`, `routeController`, etc.)
+*are* the state layer, persisted via `src/storage/persist.ts`, a thin wrapper over
+`@react-native-async-storage/async-storage`. Deliberate choice for an app this size: three
+screens, no cross-cutting derived state, and the business logic already needed to be
+UI-framework-agnostic per the instructions — a general state library would have added indirection
+without solving a problem this app actually has.
 
-## Step 3: Modifying your App
+### Noise-filtering rule (geofence)
 
-Now that you have successfully run the app, let's modify it.
+Two independent filters, both in `zoneStateMachine.ts`:
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+1. **Movement threshold (10m).** Consecutive fixes closer than that are treated as the same
+   position and skip evaluation entirely — stops GPS jitter from burning cycles while the
+   courier is standing still.
+2. **Confirmation streak (3 fixes).** A raw containment reading only becomes a *confirmed*
+   transition after 3 consecutive fixes agree. At a realistic ~2-3 second reading interval,
+   that's roughly 6-9 seconds before a departure is trusted — enough to absorb a stray fix at
+   the zone boundary without needing to average anything, without being so slow it feels
+   unresponsive.
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+**Arrival is intentionally exempt from both filters** — `canArrive`/`arrive()` check the
+single latest fix directly. The courier is standing at the door expecting instant feedback
+when they tap Arrive; filtering there would just make the button feel broken.
 
-## Congratulations! :tada:
+### A judgment call worth flagging
 
-You've successfully run and modified your React Native App. :partying_face:
+The instructions describe `AT_STOP`/`DEPARTED_EARLY` but doesn't say what happens *before* arrival.
+A third state, `NOT_ARRIVED`, was added and the Arrive button gated on it explicitly — without
+it, the state machine would have to assume "already at the stop" by default, which would fire
+a bogus `DEPARTED_EARLY` alert for every stop the courier hasn't reached yet. Once `arrive()`
+succeeds, `NOT_ARRIVED` is never re-entered.
 
-### Now what?
+## What I'd do with another day
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+- Automated unit tests for the geofence math, sync engine, and form validation. Given the
+  time available, correctness was verified manually instead — walking through force-quit
+  mid-sync, flapping airplane mode, permission grant/deny/re-grant from Settings, GPS jitter
+  at a zone boundary, a deliberately malformed template, and the concave-zone containment
+  check. That manual pass caught a few real bugs along the way (the outbox not re-queuing a
+  delivery that was mid-flight when the app was killed, the mock API's online flag not
+  actually being wired to the device's real network state, and the Proof of Delivery screen
+  rendering every field instead of only the currently-visible ones) — exactly the kind of
+  thing automated tests would catch immediately on the next change, which is the strongest
+  argument for adding them next.
+- A real date/time picker for the `DATETIME` field type instead of a text input + "Now" button.
+- A proper debug menu for `mockApiConfig` (latency/failure-rate sliders) instead of editing
+  the source constant.
+- iOS build/run — not required by the instructions, and everything in `src/` is
+  platform-agnostic, but not verified on Xcode/pod install.
+- Exponential backoff jitter (currently deterministic `2^n`), to avoid thundering-herd retries
+  if this were multi-courier.
 
-# Troubleshooting
+## What I knowingly left out
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+- No map view on the Route screen (explicitly not required — plain inside/outside readout
+  instead).
+- No login, push notifications, chat, photo capture, or route optimization — out of scope.
+- A completed stop whose delivery is stuck in the outbox's own `FAILED` sync state isn't
+  called out with its own badge on the Route screen's stop list — the Outbox screen is the
+  place that surfaces it. Worth adding as a small visual nudge on the Route screen too, but
+  not required for the stop itself, which is genuinely done from the courier's perspective
+  regardless of what happens to it on the way to the server.
 
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
