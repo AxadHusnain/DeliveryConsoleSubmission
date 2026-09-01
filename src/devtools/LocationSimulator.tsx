@@ -104,8 +104,8 @@ export function LocationSimulator({ activeStop }: Props) {
 const styles = StyleSheet.create({
   card: { margin: 16, padding: 14, backgroundColor: '#f0f0f0', borderRadius: 10 },
   title: { fontWeight: '600', marginBottom: 8 },
-  row: { flexDirection: 'row', gap: 8, marginBottom: 8, flexWrap: 'wrap' },
-  button: { backgroundColor: '#2e7bd6', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6 },
+  row: { flexDirection: 'row', gap: 8, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' },
+  button: { backgroundColor: '#2e7bd6', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
   buttonText: { color: 'white', fontSize: 13 },
   input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 6, padding: 8, width: 90, backgroundColor: 'white', color: '#16212c' },
 });

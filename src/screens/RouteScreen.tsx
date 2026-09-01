@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AppState, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouteSnapshot } from '../route/useRouteSnapshot';
 import { routeController } from '../route/routeController';
 import { locationPermissions, LocationPermissionStatus } from '../geofence/permissions';
@@ -18,7 +18,21 @@ export function RouteScreen({ onOpenPod, onOpenOutbox }: Props) {
 
   useEffect(() => {
     void locationPermissions.refresh();
-    return locationPermissions.subscribe(setPermStatus);
+    const unsubscribe = locationPermissions.subscribe(setPermStatus);
+
+    // Re-check whenever the app comes back to the foreground — covers the
+    // case where the driver granted the permission from system Settings
+    // without ever closing/reopening the app itself.
+    const appStateSub = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        void locationPermissions.refresh();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      appStateSub.remove();
+    };
   }, []);
 
   if (!snapshot.route) {
