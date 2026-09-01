@@ -1,6 +1,6 @@
 import { AppState, AppStateStatus } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import { mockApi } from '../api/mockApi';
+import { mockApi, mockApiConfig } from '../api/mockApi';
 import { Route, Stop } from '../types/route';
 import { PodTemplate, FormAnswers } from '../types/template';
 import { submitDeliveryLocally } from '../outbox/submitDelivery';
@@ -65,6 +65,7 @@ class RouteController {
   private onNetworkChange(state: { isConnected: boolean | null; isInternetReachable: boolean | null }) {
     const wasOffline = !this.isOnline;
     this.isOnline = Boolean(state.isConnected && state.isInternetReachable !== false);
+    mockApiConfig.online = this.isOnline;
     this.notify();
 
     if (wasOffline && this.isOnline) {

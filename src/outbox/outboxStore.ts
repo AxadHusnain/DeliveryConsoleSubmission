@@ -9,7 +9,13 @@ class OutboxStore {
 
   async hydrate(): Promise<void> {
     const saved = await persist.get<OutboxDelivery[]>(STORAGE_KEYS.outbox);
-    this.deliveries = saved ?? [];
+    const loaded = saved ?? [];
+
+   
+    this.deliveries = loaded.map(delivery =>
+      delivery.state === 'SYNCING' ? { ...delivery, state: 'QUEUED' as const } : delivery,
+    );
+
     this.notify();
   }
 
